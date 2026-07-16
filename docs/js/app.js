@@ -44,8 +44,35 @@ const fmtYear = (y) =>
   (y >= GRID_END ? "今" : y < 0 ? `前${-y}` : y === 0 ? "公元元年" : `${y}`);
 const fmtYearFull = (y) =>
   (y >= GRID_END ? "今" : y < 0 ? `公元前${-y}年` : y === 0 ? "公元元年" : `公元${y}年`);
-const durText = (p) =>
-  (p.y1 >= GRID_END ? `至今约${NOW - p.y0}年` : `约${p.y1 - p.y0}年`);
+/* 精确年份 (p.ex=[起,止], 数字/字符串/null): 有则显示准确年,
+   无则回落到「约 + 十年颗粒」; 绘图始终用十年颗粒 */
+const exSide = (v, fb) => {
+  if (typeof v === "number") return fmtYearFull(v);
+  if (typeof v === "string") return `${v}年`;
+  return fb >= GRID_END ? "今" : `约${fmtYearFull(fb)}`;
+};
+const exSideShort = (v, fb) => {
+  if (typeof v === "number") return fmtYear(v);
+  if (typeof v === "string") return v;
+  return fb >= GRID_END ? "今" : `约${fmtYear(fb)}`;
+};
+const yearsText = (p) => {
+  const ex = p.ex || [];
+  return `${exSide(ex[0], p.y0)} — ${exSide(ex[1], p.y1)}`;
+};
+const yearsTextShort = (p) => {
+  const ex = p.ex || [];
+  return `${exSideShort(ex[0], p.y0)}\u2013${exSideShort(ex[1], p.y1)}`;
+};
+const durText = (p) => {
+  const [s, e] = p.ex || [];
+  const ongoing = p.y1 >= GRID_END;
+  if (typeof s === "number" && ongoing) return `至今${NOW - s}年`;
+  if (typeof s === "number" && typeof e === "number") {
+    return `${e - s - (s < 0 && e > 0 ? 1 : 0)}年`;
+  }
+  return ongoing ? `至今约${NOW - p.y0}年` : `约${p.y1 - p.y0}年`;
+};
 const yearToRow = (y) => (y - M.yearStart) / M.yearStep;
 
 function darken(hex, f) {
@@ -430,7 +457,7 @@ chartWrap.addEventListener("pointermove", (e) => {
   const p = DATA.polities[hoverId];
   tooltip.innerHTML =
     `<b>${p.dispName}</b>` +
-    `<span>${fmtYearFull(p.y0)} — ${fmtYearFull(p.y1)} · ${durText(p)}</span>` +
+    `<span>${yearsText(p)} · ${durText(p)}</span>` +
     `<span>${p.regions.join(" / ")}</span>`;
   tooltip.hidden = false;
   const pad = 14;
@@ -465,14 +492,14 @@ function openPanel(id) {
 
   let html = `<h2><span class="swatch" style="background:${p.color || "transparent"}"></span>${p.dispName}</h2>`;
   if (p.raw) html += `<p class="raw">原表作「${p.raw}」</p>`;
-  html += `<p class="years">${fmtYearFull(p.y0)} — ${fmtYearFull(p.y1)}<em>${durText(p)}</em></p>`;
+  html += `<p class="years">${yearsText(p)}<em>${durText(p)}</em></p>`;
   html += `<p class="chips">${p.regions.map((r) => `<span>${r}</span>`).join("")}</p>`;
   if (p.intro) html += `<p class="intro">${p.intro}</p>`;
   if (p.note) html += `<p class="note">📌 原表批注：${p.note}</p>`;
   if (others.length) {
     html += `<h3>同期政权</h3><ul class="concurrent">` +
       others.map(({ q }) =>
-        `<li data-id="${q.id}"><i style="background:${q.color || "transparent"}"></i>${q.dispName}<small>${fmtYear(q.y0)}–${fmtYear(q.y1)}</small></li>`
+        `<li data-id="${q.id}"><i style="background:${q.color || "transparent"}"></i>${q.dispName}<small>${yearsTextShort(q)}</small></li>`
       ).join("") + "</ul>";
   }
   panelBody.innerHTML = html;

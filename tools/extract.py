@@ -373,12 +373,17 @@ def main():
             if cell in p["cells"]:
                 p["note"] = p.get("note", "") + txt
 
-    # --- 简介 ---
+    # --- 简介 / 精确年份 ---
     try:
         sys.path.insert(0, str(ROOT / "tools"))
         from intros import INTROS
     except ImportError:
         INTROS = {}
+    try:
+        from years import EXACT
+    except ImportError:
+        EXACT = {}
+    exact_used = set()
 
     # --- 输出 ---
     def runs_of(cells):
@@ -442,6 +447,11 @@ def main():
         item = dict(id=len(out_pol), name=name, color=p["color"],
                     y0=y0, y1=y1, regions=regs,
                     runs=runs_of(p["cells"]), labels=labels)
+        for k in (f"{name}@{y0}", name):
+            if k in EXACT:
+                item["ex"] = list(EXACT[k])
+                exact_used.add(k)
+                break
         raws = {r for r in p["raws"] if r != name and r != "（切分锚点）"}
         if raws:
             item["raw"] = "、".join(sorted(raws))
@@ -498,7 +508,11 @@ def main():
                      f"| {'/'.join(p['regions'])} | {'✓' if p.get('intro') else ''} |")
 
     (ROOT / "tools" / "report.md").write_text("\n".join(lines), encoding="utf-8")
-    print(f"OK: {len(out_pol)} polities -> docs/data.json")
+    unused_exact = [k for k in EXACT if k not in exact_used]
+    if unused_exact:
+        print("WARN 未匹配的精确年份键:", unused_exact)
+    print(f"OK: {len(out_pol)} polities -> docs/data.json "
+          f"(精确年份 {sum(1 for p in out_pol if 'ex' in p)} 条)")
     print(f"report -> tools/report.md")
 
 
