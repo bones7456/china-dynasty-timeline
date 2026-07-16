@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中国朝代跨度图</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📜</text></svg>">
+</head>
+<body>
+<header id="toolbar">
+  <h1 id="title">中国朝代跨度图</h1>
+  <div id="searchbox">
+    <input id="search" type="search" list="polity-names" placeholder="搜索政权…" autocomplete="off">
+    <datalist id="polity-names"></datalist>
+  </div>
+  <nav id="eranav" aria-label="朝代快捷导航"></nav>
+  <div id="controls">
+    <button id="zoom-out" title="缩小（概览）">－</button>
+    <button id="zoom-in" title="放大（细看）">＋</button>
+    <button id="theme-toggle" title="切换深浅色">◐</button>
+  </div>
+</header>
+
+<main id="scroller">
+  <div id="canvas">
+    <div id="corner-l" class="corner"></div>
+    <div id="colhead"></div>
+    <div id="corner-r" class="corner"></div>
+    <div id="axis-l" class="axis"></div>
+    <div id="chart-wrap"></div>
+    <div id="axis-r" class="axis"></div>
+  </div>
+</main>
+
+<div id="tooltip" hidden></div>
+<div id="year-pill" hidden></div>
+
+<aside id="panel" hidden>
+  <button id="panel-close" title="关闭">×</button>
+  <div id="panel-body"></div>
+</aside>
+
+<script src="data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

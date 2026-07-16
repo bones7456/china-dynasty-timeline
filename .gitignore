@@ -1,0 +1,5 @@
+# 原始 Excel 不入库
+*.xlsx
+
+.DS_Store
+__pycache__/
