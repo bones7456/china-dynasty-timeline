@@ -234,6 +234,11 @@ text.lbl {
 #panel-body .raw { color: var(--ink-3); font-size: 12px; }
 #panel-body .years { color: var(--ink-2); margin: 6px 0; }
 #panel-body .years em { font-style: normal; color: var(--ink-3); margin-left: 8px; font-size: 12px; }
+#panel-body .source-years {
+  margin: -3px 0 7px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
 #panel-body .chips span {
   display: inline-block; margin: 0 4px 4px 0; padding: 1px 8px;
   font-size: 11px; color: var(--ink-2);
@@ -260,6 +265,7 @@ text.lbl {
   border-radius: 3px; border: 1px solid var(--line-strong);
 }
 .concurrent li small { margin-left: auto; color: var(--ink-3); font-size: 11px; }
+.search-results { margin-top: 10px; }
 
 /* ------- 移动端 ------- */
 @media (max-width: 700px) {

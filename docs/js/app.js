@@ -64,6 +64,14 @@ const yearsTextShort = (p) => {
   const ex = p.ex || [];
   return `${exSideShort(ex[0], p.y0)}\u2013${exSideShort(ex[1], p.y1)}`;
 };
+const gridYearsText = (p) =>
+  `${exSide(null, p.y0)} — ${exSide(null, p.y1)}`;
+const hasSpanMismatch = (p) => {
+  const [s, e] = p.ex || [];
+  const tol = M.yearStep;
+  return (typeof s === "number" && Math.abs(s - p.y0) > tol) ||
+    (typeof e === "number" && Math.abs(e - p.y1) > tol);
+};
 const durText = (p) => {
   const [s, e] = p.ex || [];
   const ongoing = p.y1 >= GRID_END;
@@ -302,7 +310,8 @@ function render() {
   const rad = Math.min(4, rowH / 2.5);
   for (const p of DATA.polities) {
     const g = document.createElementNS(SVGNS, "g");
-    g.setAttribute("class", "polity" + (p.color ? "" : " nofill"));
+    g.setAttribute("class", "polity" + (p.color ? "" : " nofill") +
+      (selected === p.id ? " selected" : ""));
     g.dataset.id = p.id;
     const path = document.createElementNS(SVGNS, "path");
     path.setAttribute("d", loopsToPath(p.loops, colW, rowH, rad));
@@ -457,7 +466,8 @@ chartWrap.addEventListener("pointermove", (e) => {
   const p = DATA.polities[hoverId];
   tooltip.innerHTML =
     `<b>${p.dispName}</b>` +
-    `<span>${yearsText(p)} · ${durText(p)}</span>` +
+    `<span>年代：${yearsText(p)} · ${durText(p)}</span>` +
+    (hasSpanMismatch(p) ? `<span>原表色块：${gridYearsText(p)}</span>` : "") +
     `<span>${p.regions.join(" / ")}</span>`;
   tooltip.hidden = false;
   const pad = 14;
@@ -492,7 +502,10 @@ function openPanel(id) {
 
   let html = `<h2><span class="swatch" style="background:${p.color || "transparent"}"></span>${p.dispName}</h2>`;
   if (p.raw) html += `<p class="raw">原表作「${p.raw}」</p>`;
-  html += `<p class="years">${yearsText(p)}<em>${durText(p)}</em></p>`;
+  html += `<p class="years">年代：${yearsText(p)}<em>${durText(p)}</em></p>`;
+  if (hasSpanMismatch(p)) {
+    html += `<p class="source-years">原表色块覆盖：${gridYearsText(p)}</p>`;
+  }
   html += `<p class="chips">${p.regions.map((r) => `<span>${r}</span>`).join("")}</p>`;
   if (p.intro) html += `<p class="intro">${p.intro}</p>`;
   if (p.note) html += `<p class="note">📌 原表批注：${p.note}</p>`;
@@ -504,8 +517,7 @@ function openPanel(id) {
   }
   panelBody.innerHTML = html;
   panel.hidden = false;
-  panelBody.querySelectorAll("li[data-id]").forEach((li) =>
-    li.addEventListener("click", () => { jumpTo(+li.dataset.id); openPanel(+li.dataset.id); }));
+  bindPanelLinks();
 }
 function closePanel() {
   panel.hidden = true;
@@ -513,7 +525,30 @@ function closePanel() {
   svg?.querySelectorAll("g.polity.selected").forEach((g) => g.classList.remove("selected"));
 }
 
+function bindPanelLinks() {
+  panelBody.querySelectorAll("li[data-id]").forEach((li) =>
+    li.addEventListener("click", () => {
+      jumpTo(+li.dataset.id);
+      openPanel(+li.dataset.id);
+    }));
+}
+
+function openSearchResults(matches, query) {
+  selected = null;
+  svg?.querySelectorAll("g.polity.selected").forEach((g) => g.classList.remove("selected"));
+  panelBody.innerHTML = `<h2>“${query}”的搜索结果</h2>` +
+    `<p class="raw">找到 ${matches.length} 个同名或近似条目，请按年代选择。</p>` +
+    `<ul class="concurrent search-results">` +
+    matches.map((p) =>
+      `<li data-id="${p.id}"><i style="background:${p.color || "transparent"}"></i>` +
+      `${p.dispName}<small>${yearsTextShort(p)}</small></li>`
+    ).join("") + "</ul>";
+  panel.hidden = false;
+  bindPanelLinks();
+}
+
 /* ---------- 跳转 + 闪烁 ---------- */
+const flashTimers = new Map();
 function jumpTo(id) {
   const p = DATA.polities[id];
   const { rowH } = ZOOMS[zoom];
@@ -529,31 +564,57 @@ function jumpTo(id) {
   const g = svg.querySelector(`g.polity[data-id="${id}"]`);
   if (g) {
     g.classList.remove("flash");
-    void g.getBBox; // 强制重绘
+    void g.getBBox(); // 强制重绘
+    clearTimeout(flashTimers.get(id));
     requestAnimationFrame(() => g.classList.add("flash"));
-    setTimeout(() => g.classList.remove("flash"), 2400);
+    flashTimers.set(id, setTimeout(() => {
+      g.classList.remove("flash");
+      flashTimers.delete(id);
+    }, 2400));
   }
 }
 
 /* ---------- 搜索 ---------- */
 const searchInput = $("#search");
 const dl = $("#polity-names");
+const searchChoices = new Map();
 {
-  const seen = new Set();
+  const groups = new Map();
   for (const p of DATA.polities) {
-    if (!p.name || seen.has(p.name)) continue;
-    seen.add(p.name);
-    const opt = document.createElement("option");
-    opt.value = p.name;
-    dl.appendChild(opt);
+    if (!p.name) continue;
+    if (!groups.has(p.name)) groups.set(p.name, []);
+    groups.get(p.name).push(p);
+  }
+  for (const matches of groups.values()) {
+    for (const p of matches) {
+      const value = matches.length > 1
+        ? `${p.name} · ${yearsTextShort(p)} · #${p.id}`
+        : p.name;
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.label = p.regions.join(" / ");
+      dl.appendChild(opt);
+      searchChoices.set(value, p.id);
+    }
   }
 }
 function doSearch() {
   const q = searchInput.value.trim();
   if (!q) return;
-  const p = DATA.polities.find((x) => x.name === q) ||
-            DATA.polities.find((x) => x.name.includes(q));
-  if (p) { jumpTo(p.id); openPanel(p.id); }
+  if (searchChoices.has(q)) {
+    const id = searchChoices.get(q);
+    jumpTo(id);
+    openPanel(id);
+    return;
+  }
+  const exact = DATA.polities.filter((p) => p.name === q);
+  const matches = exact.length ? exact : DATA.polities.filter((p) => p.name.includes(q));
+  if (matches.length === 1) {
+    jumpTo(matches[0].id);
+    openPanel(matches[0].id);
+  } else if (matches.length > 1) {
+    openSearchResults(matches, q);
+  }
 }
 searchInput.addEventListener("change", doSearch);
 searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
@@ -610,18 +671,38 @@ scroller.addEventListener("scroll", () => {
   });
 });
 
-/* ---------- 深链接: #y=年份 或 #q=政权名 ---------- */
+/* ---------- 深链接: #y=年份 / #q=政权名 / #p=条目ID ---------- */
 function applyHash() {
-  const m = location.hash.match(/^#(y|q)=(.+)$/);
+  const m = location.hash.match(/^#(y|q|p)=(.+)$/);
   if (!m) return false;
   if (m[1] === "y") {
     const y = parseInt(m[2], 10);
     if (!isNaN(y)) { scrollToYear(y, false); return true; }
+  } else if (m[1] === "p") {
+    const id = parseInt(m[2], 10);
+    if (DATA.polities[id]?.id === id) {
+      jumpTo(id);
+      openPanel(id);
+      return true;
+    }
   } else {
-    const q = decodeURIComponent(m[2]);
-    const p = DATA.polities.find((x) => x.name === q) ||
-              DATA.polities.find((x) => x.name.includes(q));
-    if (p) { jumpTo(p.id); openPanel(p.id); return true; }
+    let q;
+    try {
+      q = decodeURIComponent(m[2]);
+    } catch {
+      return false;
+    }
+    const exact = DATA.polities.filter((p) => p.name === q);
+    const matches = exact.length ? exact : DATA.polities.filter((p) => p.name.includes(q));
+    if (matches.length === 1) {
+      jumpTo(matches[0].id);
+      openPanel(matches[0].id);
+      return true;
+    }
+    if (matches.length > 1) {
+      openSearchResults(matches, q);
+      return true;
+    }
   }
   return false;
 }

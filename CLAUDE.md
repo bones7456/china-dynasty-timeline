@@ -25,7 +25,7 @@ uv run --with openpyxl tools/extract.py
 ```
 
 - Python 一律用 `uv run`（需要包时 `uv run --with <pkg>`），不要 pip install。
-- 页面支持深链接，便于截图验证：`#y=618`（定位年份）、`#q=唐`（定位政权并开详情）、`?theme=dark`。
+- 页面支持深链接，便于截图验证：`#y=618`（定位年份）、`#q=唐`（按名称定位；同名时列出选项）、`#p=158`（按条目 ID）、`?theme=dark`。
 
 ## 坐标系与数据模型（全项目的公共约定）
 
@@ -60,6 +60,7 @@ uv run --with openpyxl tools/extract.py
 
 - **轮廓描迹**：`traceOutline` 把格子集合描成闭合环（顺时针、右转优先处理对角相接），`loopsToPath` 生成圆角 SVG path。
 - **展示三原则**：① 绘图永远用十年颗粒（y0/y1）；② 文字内容优先精确年（`ex`，见 `yearsText/durText`）；③ 不预测未来——网格在 `NOW`（当前年份）截止，仍存续政权显示「今」（原表画到 2030）。
+- 若 `ex` 与色块 `y0/y1` 相差超过一个十年格，详情与 tooltip 会额外显示「原表色块覆盖」，明确区分史实年代和原表绘图口径。
 - **标签跟随**：政权名（竖排）随滚动黏在其色块的可见区间内（`updateLabels`）；同一政权列范围与行跨度都重叠的多个标签只渲染最大者。
 - 布局：单一滚动容器 + CSS grid，区域表头 sticky top、左右年份轴 sticky left/right；宽屏下列宽自适应铺满（`curColW`）。
 - 视觉基调是古卷纸质感，深浅色通过 CSS 变量（`:root[data-theme]` + prefers-color-scheme 回落）；政权颜色继承自原 Excel，是实体身份的一部分，不要重新配色。
