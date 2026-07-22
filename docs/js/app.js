@@ -64,14 +64,6 @@ const yearsTextShort = (p) => {
   const ex = p.ex || [];
   return `${exSideShort(ex[0], p.y0)}\u2013${exSideShort(ex[1], p.y1)}`;
 };
-const gridYearsText = (p) =>
-  `${exSide(null, p.y0)} — ${exSide(null, p.y1)}`;
-const hasSpanMismatch = (p) => {
-  const [s, e] = p.ex || [];
-  const tol = M.yearStep;
-  return (typeof s === "number" && Math.abs(s - p.y0) > tol) ||
-    (typeof e === "number" && Math.abs(e - p.y1) > tol);
-};
 const durText = (p) => {
   const [s, e] = p.ex || [];
   const ongoing = p.y1 >= GRID_END;
@@ -483,7 +475,6 @@ chartWrap.addEventListener("pointermove", (e) => {
   tooltip.innerHTML =
     `<b>${p.dispName}</b>` +
     `<span>年代：${yearsText(p)} · ${durText(p)}</span>` +
-    (hasSpanMismatch(p) ? `<span>原表色块：${gridYearsText(p)}</span>` : "") +
     `<span>${p.regions.join(" / ")}</span>`;
   tooltip.hidden = false;
   const pad = 14;
@@ -522,14 +513,10 @@ function openPanel(id) {
     .slice(0, 16);
 
   let html = `<h2><span class="swatch" style="background:${p.color || "transparent"}"></span>${p.dispName}</h2>`;
-  if (p.raw) html += `<p class="raw">原表作「${p.raw}」</p>`;
   html += `<p class="years">年代：${yearsText(p)}<em>${durText(p)}</em></p>`;
-  if (hasSpanMismatch(p)) {
-    html += `<p class="source-years">原表色块覆盖：${gridYearsText(p)}</p>`;
-  }
   html += `<p class="chips">${p.regions.map((r) => `<span>${r}</span>`).join("")}</p>`;
   if (p.intro) html += `<p class="intro">${p.intro}</p>`;
-  if (p.note) html += `<p class="note">📌 原表批注：${p.note}</p>`;
+  if (p.note) html += `<p class="note">📌 ${p.note}</p>`;
   if (others.length) {
     html += `<h3>同期政权</h3><ul class="concurrent">` +
       others.map(({ q }) =>
