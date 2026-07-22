@@ -398,18 +398,17 @@ function updateLabels() {
       if (lo < hi) target = Math.max(lo, Math.min(hi, target));
       else target = L.cy;
 
-      // 竖排标签随年代移动时，原标签矩形所在的列不一定仍被该政权占据。
-      // 取目标行中矩形范围内实际有色块的列中心，避免文字漂到轮廓外。
-      if (!L.horiz) {
-        const row = Math.max(0, Math.min(M.rows - 1, Math.floor(target / L.rowH)));
-        let hit0 = null, hit1 = null;
-        for (let c = L.c0; c <= L.c1; c++) {
-          if (!L.cells.has(row * 64 + c)) continue;
-          if (hit0 === null) hit0 = c;
-          hit1 = c;
-        }
-        if (hit0 !== null) targetX = ((hit0 + hit1 + 1) / 2) * L.colW;
+      // 标签随年代移动时，原标签矩形所在的列不一定仍被该政权占据
+      // （形状忽宽忽窄的政权尤其明显）。取目标行中矩形范围内实际
+      // 有色块的列中心，避免文字漂到轮廓外——横排竖排标签都要处理。
+      const row = Math.max(0, Math.min(M.rows - 1, Math.floor(target / L.rowH)));
+      let hit0 = null, hit1 = null;
+      for (let c = L.c0; c <= L.c1; c++) {
+        if (!L.cells.has(row * 64 + c)) continue;
+        if (hit0 === null) hit0 = c;
+        hit1 = c;
       }
+      if (hit0 !== null) targetX = ((hit0 + hit1 + 1) / 2) * L.colW;
     }
     const dx = targetX - L.cx;
     const dy = target - L.cy;
