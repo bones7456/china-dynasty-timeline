@@ -509,7 +509,12 @@ function openPanel(id) {
   const p = DATA.polities[id];
   selected = id;
   svg.querySelectorAll("g.polity.selected").forEach((g) => g.classList.remove("selected"));
-  svg.querySelector(`g.polity[data-id="${id}"]`)?.classList.add("selected");
+  const target = svg.querySelector(`g.polity[data-id="${id}"]`);
+  target?.classList.add("selected");
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    panel.classList.toggle("panel-left", rect.left + rect.width / 2 > window.innerWidth / 2);
+  }
 
   const others = DATA.polities
     .filter((q) => q.id !== id && q.y0 < p.y1 && q.y1 > p.y0 && q.name)
@@ -552,6 +557,7 @@ function bindPanelLinks() {
 
 function openSearchResults(matches, query) {
   selected = null;
+  panel.classList.remove("panel-left");
   svg?.querySelectorAll("g.polity.selected").forEach((g) => g.classList.remove("selected"));
   panelBody.innerHTML = `<h2>“${query}”的搜索结果</h2>` +
     `<p class="raw">找到 ${matches.length} 个同名或近似条目，请按年代选择。</p>` +

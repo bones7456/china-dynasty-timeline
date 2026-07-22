@@ -155,7 +155,7 @@ g.polity.nofill path {
   stroke: var(--ink-3);
   stroke-dasharray: 3 3;
 }
-svg.hovering g.polity:not(.hot):not(.selected) { opacity: 0.18; }
+svg.hovering g.polity:not(.hot):not(.selected) { opacity: 0.55; }
 g.polity.hot path, g.polity.selected path {
   fill-opacity: 1;
   stroke-width: 1.6;
@@ -214,6 +214,10 @@ text.lbl {
   border: 1px solid var(--line-strong); border-radius: 12px;
   box-shadow: 0 8px 32px var(--shadow);
   overflow-y: auto;
+}
+@media (min-width: 701px) {
+  /* 点击右侧色块时浮层改开在左边，避免盖住刚点的地方 */
+  #panel.panel-left { right: auto; left: 12px; }
 }
 #panel-close {
   position: absolute; top: 8px; right: 10px;
