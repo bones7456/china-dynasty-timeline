@@ -3,8 +3,7 @@ window.DYNASTY_DATA={
     "yearStart": -2030,
     "yearStep": 10,
     "rows": 406,
-    "cols": 42,
-    "source": "朝代跨度表.xlsx / Sheet4"
+    "cols": 42
   },
   "regions": [
     {
