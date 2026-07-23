@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **后续维护不得读取、修改、运行或依赖任何 Python 代码及 Excel 文件。** 原始 Excel 和 `tools/` 下的 Python 数据管线均视为已停用的历史产物，不得检查、修复或重新执行，也不得用它们重新生成数据。
 
-所有功能和数据修改只在 `docs/` 下完成。数据的权威来源是已入库的 `docs/data.json` 与 `docs/data.js`；修改数据时必须直接同步修改这两个文件。`data.js` 是 `window.DYNASTY_DATA=<同一份JSON>;` 包装，供 `file://` 场景使用，两者必须保持一致。
+所有功能和数据修改只在 `docs/` 下完成。数据的权威来源与唯一载体是已入库的 `docs/data.js`（`window.DYNASTY_DATA=<JSON>;`），`index.html` 通过 `<script>` 加载，无需服务器即可用 `file://` 打开；不再维护独立的 `data.json`。
 
 ## 常用命令
 
@@ -30,7 +30,7 @@ open docs/index.html
 ## 坐标系与数据模型（全项目的公共约定）
 
 - 纵轴 = 时间：每行 10 年，行 0 = 公元前 2030 年（`meta.yearStart=-2030, yearStep=10`）。
-- 横轴 = 地理：42 列分属 7 大区（东南亚/青藏高原/西域/中原/东北/外蒙古/中亚），见 `data.json` 的 `regions`。
+- 横轴 = 地理：42 列分属 7 大区（东南亚/青藏高原/西域/中原/东北/外蒙古/中亚），见 `data.js` 中 `DYNASTY_DATA.regions`。
 - 每个政权（polity）是同色格子组成的不规则区域：
   - `runs`: 行程列表 `[row, col0, col1]`（0-based）
   - `labels`: 标签矩形 `[r0, c0, r1, c1]`（来自原表带名字的合并单元格）

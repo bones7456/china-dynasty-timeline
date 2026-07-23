@@ -36,7 +36,7 @@ cd docs && python3 -m http.server 8000
 ## 数据管线
 
 ```
-朝代跨度表.xlsx ──(tools/extract.py)──▶ docs/data.json + docs/data.js
+朝代跨度表.xlsx ──(tools/extract.py)──▶ docs/data.js
                                         tools/report.md (审核报告)
 ```
 
@@ -71,6 +71,5 @@ uv run --with openpyxl tools/extract.py
     ├── index.html
     ├── css/style.css
     ├── js/app.js      轮廓描迹 + 渲染 + 交互（无依赖原生 JS）
-    ├── data.json      解析产物
-    └── data.js        同上（file:// 场景用）
+    └── data.js        数据（window.DYNASTY_DATA=<JSON>;，index.html 通过 <script> 加载）
 ```
