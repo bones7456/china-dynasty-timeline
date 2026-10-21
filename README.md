@@ -1,6 +1,6 @@
 # 中国朝代跨度图 · 世界历史跨度图
 
-在线访问：[中国朝代跨度图](https://bones7456.github.io/china-dynasty-timeline/china/) · [世界历史跨度图](https://bones7456.github.io/china-dynasty-timeline/world/)
+在线访问：[中国朝代跨度图](https://bones7456.github.io/history-timeline/china/) · [世界历史跨度图](https://bones7456.github.io/history-timeline/world/)
 
 把《朝代跨度表.xlsx》做成的交互网页版：纵轴为时间（每行 10 年，公元前 2030 — 公元 2030），
 横轴为地理七大区（东南亚 / 青藏高原 / 西域 / 中原 / 东北 / 外蒙古 / 中亚），

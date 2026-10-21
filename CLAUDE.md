@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 项目概况
 
 把《朝代跨度表.xlsx》（一张"时间×地理"的中国政权跨度 Excel 图）转成的纯静态交互网页。
-线上地址：https://bones7456.github.io/china-dynasty-timeline/china/ （GitHub Pages，`main` 分支 `/docs` 目录，push 即部署）。同站另有世界历史跨度图 `/world/`。
+线上地址：https://bones7456.github.io/history-timeline/china/ （GitHub Pages，`main` 分支 `/docs` 目录，push 即部署）。同站另有世界历史跨度图 `/world/`。
 
 `docs/` 布局：`china/` 中国朝代图、`world/` 世界历史图，两者互相在页脚链接；根目录 `docs/index.html` 只是跳转页——中国版原先就在站点根目录，迁到 `china/` 后旧地址用 JS `location.replace` 跳转（保留 `#y=…` 深链接与 `?theme=`），meta refresh 兜底。GitHub Pages 无法返回真正的 301，不要删这个跳转页，否则旧链接全部失效。
 
