@@ -76,7 +76,7 @@ uv run --with openpyxl tools/extract.py
     │   ├── css/style.css
     │   ├── js/app.js  轮廓描迹 + 渲染 + 交互（无依赖原生 JS）
     │   └── data.js    数据（window.DYNASTY_DATA=<JSON>;，index.html 通过 <script> 加载）
-    └── world/         世界历史跨度图（五千年 × 21 个区域）
+    └── world/         世界历史跨度图（五千年 × 20 个区域）
         ├── index.html
         ├── css/style.css
         ├── js/app.js
