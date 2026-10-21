@@ -635,12 +635,12 @@ function setZoom(z) {
   // 保持视口中心年代不变
   const old = ZOOMS[zoom];
   const oldColW = curColW;
-  const centerRow = (scroller.scrollTop - HEAD_H + (scroller.clientHeight - HEAD_H) / 2) / old.rowH;
+  const centerRow = (scroller.scrollTop + (scroller.clientHeight - HEAD_H) / 2) / old.rowH;
   const centerColFrac = (scroller.scrollLeft + scroller.clientWidth / 2 - AXIS_W()) / (M.cols * oldColW);
   zoom = z;
   render();
   const nw = ZOOMS[zoom];
-  scroller.scrollTop = centerRow * nw.rowH + HEAD_H - (scroller.clientHeight - HEAD_H) / 2;
+  scroller.scrollTop = centerRow * nw.rowH - (scroller.clientHeight - HEAD_H) / 2;
   scroller.scrollLeft = centerColFrac * M.cols * curColW + AXIS_W() - scroller.clientWidth / 2;
 }
 $("#zoom-in").addEventListener("click", () => setZoom(zoom + 1));
