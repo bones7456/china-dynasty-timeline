@@ -90,7 +90,8 @@ body {
   background: var(--card); border: 1px solid var(--line-strong); border-radius: 8px;
   cursor: pointer;
 }
-#controls a { padding: 0 9px; font-size: 12px; white-space: nowrap; }
+#controls a, #controls button.text { padding: 0 9px; font-size: 12px; white-space: nowrap; }
+#controls button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); font-weight: 700; }
 #controls button:hover, #controls a:hover { color: var(--accent); border-color: var(--accent); }
 
 /* ------- 滚动画布 ------- */
@@ -281,8 +282,9 @@ text.lbl {
 /* ------- 移动端 ------- */
 @media (max-width: 700px) {
   #toolbar { flex-wrap: wrap; height: 84px; padding: 6px 10px; row-gap: 2px; }
-  #title { font-size: 15px; letter-spacing: 1px; }
-  #searchbox input { width: 110px; }
+  #title { font-size: 15px; letter-spacing: 0.5px; }
+  #searchbox input { width: 80px; }
+  #controls button.text { padding: 0 6px; }
   #controls a { display: none; } /* 手机端由页脚链接到世界历史图 */
   #eranav { order: 3; flex-basis: 100%; }
   #scroller { inset: 84px 0 0 0; }

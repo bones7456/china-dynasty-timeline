@@ -13,6 +13,9 @@
  *        与邻国同期并存等）写明原因，显示在详情面板中
  *   c  （可选）固定配色序号，否则自动着色保证相邻色块不同色
  *
+ * regions[].area: 每列所代表地区的近似面积（万 km²，取今日国家/省区面积估算），
+ *   供「按面积」布局分配列宽（按平方根）；只影响显示，不影响数据。
+ *
  * 位置写法："埃及"=整个区域；"埃及:1-2"=区域内第1~2列；"埃及:0"=单列；
  *          "黎凡特~中亚"=从黎凡特首列到中亚末列；"伊比利亚:2~法兰西:0" 亦可。
  * 绘图时年份四舍五入到十年格；文字展示用 ex。
@@ -24,26 +27,26 @@
 window.WORLD_DATA = {
   meta: { yearStart: -3500, yearStep: 10, rows: 553 },
   regions: [
-    { key: "美洲", name: "美洲", en: "Americas", cols: 4 },          // 北美 / 墨西哥 / 玛雅·中美 / 安第斯
-    { key: "不列颠", name: "不列颠", en: "Britain", cols: 2 },        // 英格兰 / 苏格兰
-    { key: "伊比利亚", name: "伊比利亚", en: "Iberia", cols: 4 },     // 葡萄牙 / 莱昂-卡斯蒂利亚 / 南部安达卢斯 / 阿拉贡
-    { key: "法兰西", name: "法兰西", en: "France", cols: 2 },         // 南 / 北
-    { key: "意大利", name: "意大利", en: "Italy", cols: 3 },          // 北 / 中 / 南
-    { key: "中欧", name: "中欧", en: "Central Europe", cols: 4 },     // 德西 / 德东 / 奥地利 / 匈牙利
-    { key: "东欧", name: "东欧", en: "Eastern Europe", cols: 5 },     // 波兰 / 立陶宛-白俄 / 俄罗斯 / 乌克兰-草原 / 罗马尼亚
-    { key: "巴尔干", name: "巴尔干", en: "Balkans", cols: 4 },        // 塞尔维亚-克罗地亚 / 保加利亚 / 马其顿 / 希腊
-    { key: "安纳托利亚", name: "安纳托利亚", en: "Anatolia", cols: 3 }, // 西 / 中 / 东-亚美尼亚
-    { key: "埃及", name: "埃及·北非", en: "Egypt & N. Africa", cols: 3 }, // 马格里布 / 上埃及 / 下埃及
-    { key: "黎凡特", name: "黎凡特", en: "Levant", cols: 3 },         // 巴勒斯坦 / 腓尼基 / 叙利亚
-    { key: "两河", name: "两河流域", en: "Mesopotamia", cols: 3 },     // 北(亚述) / 中(巴比伦) / 南(苏美尔)
-    { key: "伊朗", name: "伊朗", en: "Iran", cols: 3 },               // 西南(埃兰) / 中部 / 东部(呼罗珊)
-    { key: "中亚", name: "中亚", en: "Central Asia", cols: 2 },       // 河中及周边（今中亚五国）/ 阿富汗
-    { key: "南亚", name: "南亚", en: "South Asia", cols: 4 },         // 印度河 / 恒河 / 德干 / 南印度
-    { key: "东南亚", name: "东南亚", en: "Southeast Asia", cols: 5 }, // 海岛 / 缅甸 / 暹罗 / 高棉 / 越南
-    { key: "中国", name: "中国", en: "China", cols: 4 },              // 华南 / 华中 / 华北 / 西部
-    { key: "草原", name: "草原", en: "Steppe", cols: 2 },         // 西部草原（七河、准噶尔）/ 蒙古高原
-    { key: "朝鲜", name: "朝鲜半岛", en: "Korea", cols: 3 },          // 北 / 西南 / 东南
-    { key: "日本", name: "日本", en: "Japan", cols: 2 },              // 本土 / 琉球
+    { key: "美洲", name: "美洲", en: "Americas", cols: 4, area: [983, 196, 52, 266] },          // 北美 / 墨西哥 / 玛雅·中美 / 安第斯
+    { key: "不列颠", name: "不列颠", en: "Britain", cols: 2, area: [15, 8] },        // 英格兰 / 苏格兰
+    { key: "伊比利亚", name: "伊比利亚", en: "Iberia", cols: 4, area: [9, 25, 13, 12] },     // 葡萄牙 / 莱昂-卡斯蒂利亚 / 南部安达卢斯 / 阿拉贡
+    { key: "法兰西", name: "法兰西", en: "France", cols: 2, area: [30, 25] },         // 南 / 北
+    { key: "意大利", name: "意大利", en: "Italy", cols: 3, area: [12, 7, 11] },          // 北 / 中 / 南
+    { key: "中欧", name: "中欧", en: "Central Europe", cols: 4, area: [20, 16, 16, 9] },     // 德西 / 德东 / 奥地利 / 匈牙利
+    { key: "东欧", name: "东欧", en: "Eastern Europe", cols: 5, area: [31, 27, 400, 60, 24] },     // 波兰 / 立陶宛-白俄 / 俄罗斯 / 乌克兰-草原 / 罗马尼亚
+    { key: "巴尔干", name: "巴尔干", en: "Balkans", cols: 4, area: [25, 11, 7, 13] },        // 塞尔维亚-克罗地亚 / 保加利亚 / 马其顿 / 希腊
+    { key: "安纳托利亚", name: "安纳托利亚", en: "Anatolia", cols: 3, area: [27, 27, 27] }, // 西 / 中 / 东-亚美尼亚
+    { key: "埃及", name: "埃及·北非", en: "Egypt & N. Africa", cols: 3, area: [300, 50, 50] }, // 马格里布 / 上埃及 / 下埃及
+    { key: "黎凡特", name: "黎凡特", en: "Levant", cols: 3, area: [3, 1, 19] },         // 巴勒斯坦 / 腓尼基 / 叙利亚
+    { key: "两河", name: "两河流域", en: "Mesopotamia", cols: 3, area: [15, 15, 14] },     // 北(亚述) / 中(巴比伦) / 南(苏美尔)
+    { key: "伊朗", name: "伊朗", en: "Iran", cols: 3, area: [55, 55, 55] },               // 西南(埃兰) / 中部 / 东部(呼罗珊)
+    { key: "中亚", name: "中亚", en: "Central Asia", cols: 2, area: [400, 65] },       // 河中及周边（今中亚五国）/ 阿富汗
+    { key: "南亚", name: "南亚", en: "South Asia", cols: 4, area: [88, 110, 100, 60] },         // 印度河 / 恒河 / 德干 / 南印度
+    { key: "东南亚", name: "东南亚", en: "Southeast Asia", cols: 5, area: [224, 68, 51, 42, 33] }, // 海岛 / 缅甸 / 暹罗 / 高棉 / 越南
+    { key: "中国", name: "中国", en: "China", cols: 4, area: [120, 110, 90, 450] },              // 华南 / 华中 / 华北 / 西部
+    { key: "草原", name: "草原", en: "Steppe", cols: 2, area: [60, 274] },         // 西部草原（七河、准噶尔）/ 蒙古高原
+    { key: "朝鲜", name: "朝鲜半岛", en: "Korea", cols: 3, area: [12, 5, 5] },          // 北 / 西南 / 东南
+    { key: "日本", name: "日本", en: "Japan", cols: 2, area: [37, 0.23] },              // 本土 / 琉球
   ],
   polities: [
     /* ===================== 跨区大帝国 ===================== */

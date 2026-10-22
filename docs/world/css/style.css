@@ -95,7 +95,8 @@ body {
   background: var(--card); border: 1px solid var(--line-strong); border-radius: 8px;
   cursor: pointer;
 }
-#controls a { padding: 0 9px; font-size: 12px; white-space: nowrap; }
+#controls a, #controls button.text { padding: 0 9px; font-size: 12px; white-space: nowrap; }
+#controls button[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); font-weight: 700; }
 #controls button:hover, #controls a:hover { color: var(--accent); border-color: var(--accent); }
 
 /* ------- 滚动画布 ------- */
@@ -298,7 +299,8 @@ text.lbl tspan.en { font-weight: 700; letter-spacing: 0.3px; }
   #title { font-size: 15px; }
   #title small { display: none; }
   #controls a { display: none; } /* 手机端由页脚链接回中国朝代图 */
-  #searchbox input { width: 110px; }
+  #searchbox input { width: 80px; }
+  #controls button.text { padding: 0 6px; }
   #eranav { order: 3; flex-basis: 100%; }
   #scroller { inset: 84px 0 0 0; }
   #panel {

@@ -31,6 +31,27 @@ const ZOOMS = [
 ];
 let zoom = window.innerWidth < 700 ? 0 : 1;
 
+/* ---------- 列布局: 等宽 / 按面积 ---------- */
+/* equal: 每列同宽 (默认); area: 列宽与该列代表地区面积 (regions[].area) 的平方根成正比
+ * (纯面积比例差距达数千倍, 西欧、地中海会被压成细条; 平方根保留大小关系又不失可读性) */
+const AREA_MIN_W = 3; // 按面积时细列的最小宽度 (px), 保证仍可悬停
+let layout = "equal";
+let colX = [];        // colX[c] = 第 c 列左边界, colX[M.cols] = 总宽
+const AREAS = DATA.regions.flatMap((rg) => rg.area.map(Math.sqrt));
+/* 把总宽 W 按权重 AREAS 分给各列; 不足最小宽度的列取最小宽度, 余下按比例重分 */
+function areaWidths(W) {
+  const fixed = new Set();
+  let widths;
+  for (;;) {
+    const rest = AREAS.reduce((s, a, c) => s + (fixed.has(c) ? 0 : a), 0);
+    const scale = (W - fixed.size * AREA_MIN_W) / rest;
+    widths = AREAS.map((a, c) => (fixed.has(c) ? AREA_MIN_W : a * scale));
+    const small = widths.findIndex((w, c) => !fixed.has(c) && w < AREA_MIN_W);
+    if (small < 0) return widths;
+    widths.forEach((w, c) => { if (w < AREA_MIN_W) fixed.add(c); });
+  }
+}
+
 const AXIS_W = () => (window.innerWidth < 700 ? 40 : 52);
 const HEAD_H = 38;
 
@@ -177,10 +198,10 @@ function traceOutline(cells) {
   return loops;
 }
 /* 环 -> 圆角 path */
-function loopsToPath(loops, colW, rowH, rad) {
+function loopsToPath(loops, X, rowH, rad) {
   let d = "";
   for (const pts of loops) {
-    const P = pts.map(([x, y]) => [x * colW, y * rowH]);
+    const P = pts.map(([x, y]) => [X[x], y * rowH]);
     const n = P.length;
     const seg = [];
     for (let i = 0; i < n; i++) {
@@ -296,14 +317,20 @@ let svg = null;
 let labelEls = [];  // 跟随滚动的标签及其原始位置/可移动范围
 let selected = null;
 
-let curColW = ZOOMS[1].colW; // 实际列宽 (宽屏下自适应铺满)
+let curW = 0; // 图表实际总宽 (宽屏下自适应铺满)
+const colLeft = (c) => colX[c];
+const spanW = (c0, c1) => colX[c1 + 1] - colX[c0];
 function render() {
   const { rowH, fs } = ZOOMS[zoom];
   const axw = AXIS_W();
+  // 两种布局总宽相同: 等宽布局的列宽乘列数
   const colW = Math.max(ZOOMS[zoom].colW,
     Math.floor((scroller.clientWidth - 2 * axw) / M.cols));
-  curColW = colW;
   const W = M.cols * colW, H = END_ROW * rowH;
+  const widths = layout === "area" ? areaWidths(W) : AREAS.map(() => colW);
+  colX = [0];
+  for (const w of widths) colX.push(colX[colX.length - 1] + w);
+  curW = W;
 
   canvas.style.gridTemplateColumns = `${axw}px ${W}px ${axw}px`;
   canvas.style.gridTemplateRows = `${HEAD_H}px ${H}px`;
@@ -314,10 +341,11 @@ function render() {
   DATA.regions.forEach((rg, i) => {
     const div = document.createElement("div");
     div.className = "region" + (i % 2 ? " alt" : "");
-    div.textContent = rg.name;
+    // 按面积布局下太窄的区域放不下名字, 只留悬停提示
+    if (layout === "equal" || spanW(rg.c0, rg.c1) >= rg.name.length * 11 + 2) div.textContent = rg.name;
     div.title = `${rg.name} · ${rg.en}`;
-    div.style.left = rg.c0 * colW + "px";
-    div.style.width = (rg.c1 - rg.c0 + 1) * colW + "px";
+    div.style.left = colLeft(rg.c0) + "px";
+    div.style.width = spanW(rg.c0, rg.c1) + "px";
     head.appendChild(div);
   });
 
@@ -358,8 +386,8 @@ function render() {
   DATA.regions.forEach((rg, i) => {
     if (i % 2) {
       const rect = document.createElementNS(SVGNS, "rect");
-      rect.setAttribute("x", rg.c0 * colW);
-      rect.setAttribute("width", (rg.c1 - rg.c0 + 1) * colW);
+      rect.setAttribute("x", colLeft(rg.c0));
+      rect.setAttribute("width", spanW(rg.c0, rg.c1));
       rect.setAttribute("y", 0);
       rect.setAttribute("height", H);
       rect.setAttribute("class", "region-shade");
@@ -367,7 +395,7 @@ function render() {
     }
     if (i > 0) {
       const ln = document.createElementNS(SVGNS, "line");
-      ln.setAttribute("x1", rg.c0 * colW); ln.setAttribute("x2", rg.c0 * colW);
+      ln.setAttribute("x1", colLeft(rg.c0)); ln.setAttribute("x2", colLeft(rg.c0));
       ln.setAttribute("y1", 0); ln.setAttribute("y2", H);
       ln.setAttribute("class", "region-sep");
       bg.appendChild(ln);
@@ -401,18 +429,18 @@ function render() {
     g.setAttribute("class", "polity" + (selected === p.id ? " selected" : ""));
     g.dataset.id = p.id;
     const path = document.createElementNS(SVGNS, "path");
-    path.setAttribute("d", loopsToPath(p.loops, colW, rowH, rad));
+    path.setAttribute("d", loopsToPath(p.loops, colX, rowH, rad));
     path.setAttribute("fill", p.color);
     path.setAttribute("stroke", darken(p.color, 0.6));
     g.appendChild(path);
 
     p.labels.forEach(([r0, c0, r1, c1], li) => {
       const text = p.labelText;
-      const wPx = (c1 - c0 + 1) * colW, hPx = (r1 - r0 + 1) * rowH;
+      const wPx = spanW(c0, c1), hPx = (r1 - r0 + 1) * rowH;
       const horiz = wPx > hPx * 1.4 && text.length > 1;
       let size;
       if (horiz) size = Math.min(fs * 1.15, hPx * 0.8, (wPx - 6) / text.length);
-      else size = Math.min(fs, colW * 0.72, Math.max(hPx * 0.9 / text.length, 0));
+      else size = Math.min(fs, wPx / (c1 - c0 + 1) * 0.72, Math.max(hPx * 0.9 / text.length, 0));
       // 长政权名字号不受高度限制 (可跟随滚动), 短的必须塞得下
       const [ys, ye] = p.labelSpans[li];
       const spanH = (ye - ys + 1) * rowH;
@@ -421,7 +449,7 @@ function render() {
       const tx = document.createElementNS(SVGNS, "text");
       tx.setAttribute("class", "lbl" + (isLight(p.color) ? "" : " on-dark"));
       tx.setAttribute("font-size", size.toFixed(1));
-      const cx = ((c0 + c1 + 1) / 2) * colW;
+      const cx = (colLeft(c0) + colLeft(c1 + 1)) / 2;
       const cy = ((r0 + r1 + 1) / 2) * rowH;
       let h;
       if (horiz) {
@@ -456,7 +484,7 @@ function render() {
       }
       g.appendChild(tx);
       labelEls.push({
-        el: tx, cx, cy, c0, c1, cells: p.cells, rowH, colW, h,
+        el: tx, cx, cy, c0, c1, cells: p.cells, rowH, h,
         spanTop: ys * rowH, spanBot: (ye + 1) * rowH,
       });
     });
@@ -493,7 +521,7 @@ function updateLabels() {
         if (hit0 === null) hit0 = c;
         hit1 = c;
       }
-      if (hit0 !== null) targetX = ((hit0 + hit1 + 1) / 2) * L.colW;
+      if (hit0 !== null) targetX = (colLeft(hit0) + colLeft(hit1 + 1)) / 2;
     }
     const dx = targetX - L.cx;
     const dy = target - L.cy;
@@ -663,10 +691,9 @@ const flashTimers = new Map();
 function jumpTo(id, smooth = true) {
   const p = DATA.polities[id];
   const { rowH } = ZOOMS[zoom];
-  const colW = curColW;
   const rect = p.labels[0] || p.rects[0];
   const cy = ((rect[0] + rect[2] + 1) / 2) * rowH + HEAD_H;
-  const cx = ((rect[1] + rect[3] + 1) / 2) * colW + AXIS_W();
+  const cx = (colLeft(rect[1]) + colLeft(rect[3] + 1)) / 2 + AXIS_W();
   scroller.scrollTo({
     top: Math.max(0, cy - scroller.clientHeight / 2),
     left: Math.max(0, cx - scroller.clientWidth / 2),
@@ -722,20 +749,30 @@ function doSearch() {
 searchInput.addEventListener("change", doSearch);
 searchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
 
-/* ---------- 缩放 ---------- */
+/* ---------- 缩放 / 切换布局: 保持视口中心的年代与地点不变 ---------- */
+/* 像素 <-> 小数列号 (两种布局下列宽不同, 以列为单位保持横向中心) */
+function pxToCol(x) {
+  let c = 0;
+  while (c < M.cols - 1 && colX[c + 1] <= x) c++;
+  return c + Math.max(0, Math.min(1, (x - colX[c]) / (colX[c + 1] - colX[c])));
+}
+function colToPx(f) {
+  const c = Math.min(M.cols - 1, Math.floor(f));
+  return colX[c] + (f - c) * (colX[c + 1] - colX[c]);
+}
+function rerenderKeepingCenter(apply) {
+  const oldRowH = ZOOMS[zoom].rowH;
+  const centerRow = (scroller.scrollTop + (scroller.clientHeight - HEAD_H) / 2) / oldRowH;
+  const centerCol = pxToCol(scroller.scrollLeft + scroller.clientWidth / 2 - AXIS_W());
+  apply();
+  render();
+  scroller.scrollTop = centerRow * ZOOMS[zoom].rowH - (scroller.clientHeight - HEAD_H) / 2;
+  scroller.scrollLeft = colToPx(centerCol) + AXIS_W() - scroller.clientWidth / 2;
+}
 function setZoom(z) {
   z = Math.max(0, Math.min(ZOOMS.length - 1, z));
   if (z === zoom) return;
-  // 保持视口中心年代不变
-  const old = ZOOMS[zoom];
-  const oldColW = curColW;
-  const centerRow = (scroller.scrollTop + (scroller.clientHeight - HEAD_H) / 2) / old.rowH;
-  const centerColFrac = (scroller.scrollLeft + scroller.clientWidth / 2 - AXIS_W()) / (M.cols * oldColW);
-  zoom = z;
-  render();
-  const nw = ZOOMS[zoom];
-  scroller.scrollTop = centerRow * nw.rowH - (scroller.clientHeight - HEAD_H) / 2;
-  scroller.scrollLeft = centerColFrac * M.cols * curColW + AXIS_W() - scroller.clientWidth / 2;
+  rerenderKeepingCenter(() => { zoom = z; });
 }
 $("#zoom-in").addEventListener("click", () => setZoom(zoom + 1));
 $("#zoom-out").addEventListener("click", () => setZoom(zoom - 1));
@@ -744,6 +781,21 @@ scroller.addEventListener("wheel", (e) => {
   e.preventDefault();
   setZoom(zoom + (e.deltaY < 0 ? 1 : -1));
 }, { passive: false });
+
+/* ---------- 列布局切换 (?layout=area 可直接指定) ---------- */
+const layoutBtn = $("#layout-toggle");
+function applyLayout(l) {
+  layout = l === "area" ? "area" : "equal";
+  layoutBtn.setAttribute("aria-pressed", layout === "area");
+  try { localStorage.setItem("world-layout", layout); } catch {}
+}
+layoutBtn.addEventListener("click", () =>
+  rerenderKeepingCenter(() => applyLayout(layout === "area" ? "equal" : "area")));
+{
+  let saved = new URLSearchParams(location.search).get("layout");
+  try { saved ||= localStorage.getItem("world-layout"); } catch {}
+  applyLayout(saved);
+}
 
 /* ---------- 深浅色 ---------- */
 const themeBtn = $("#theme-toggle");
